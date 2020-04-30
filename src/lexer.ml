@@ -22,28 +22,57 @@ module Lexer = struct
       ch = new_ch;
     }
 
+  let is_alpha = function 'a' .. 'z' | 'A' .. 'Z' | '_' -> true | _ -> false
+
+  let is_digit = function '0' .. '9' -> true | _ -> false
+
+  (* Doesn't necessarily have to be a string, if it's let then the token is Token.LET etc etc. *)
+  let read_identifier fn lexer =
+    Printf.printf "%d\n" lexer.position;
+    let position = lexer.position in
+    let rec read lex = if fn lex.ch then read_char lex |> read else lex in
+    let updated_lex = read lexer in
+    ( updated_lex,
+      String.sub updated_lex.input position
+        (updated_lex.read_position - position - 1) )
+
   let new_lexer input =
     let lexer = { input; position = 0; read_position = 0; ch = null_byte } in
     read_char lexer
 
   let next_token lexer =
     match lexer.ch with
-    | '=' -> (read_char lexer, Token.ASSIGN)
-    | ';' -> (read_char lexer, Token.SEMICOLON)
-    | '(' -> (read_char lexer, Token.LPAREN)
-    | ')' -> (read_char lexer, Token.RPAREN)
-    | ',' -> (read_char lexer, Token.COMMA)
-    | '+' -> (read_char lexer, Token.PLUS)
-    | '{' -> (read_char lexer, Token.LBRACE)
-    | '}' -> (read_char lexer, Token.RBRACE)
-    | '\x00' -> (lexer, Token.EOF)
-    | _ -> failwith "unmatched character"
+    | '=' ->
+        (read_char lexer, { Token.token_type = Token.ASSIGN; literal = "=" })
+    | '(' ->
+        (read_char lexer, { Token.token_type = Token.LPAREN; literal = "(" })
+    | ';' ->
+        (read_char lexer, { Token.token_type = Token.SEMICOLON; literal = ";" })
+    | ')' ->
+        (read_char lexer, { Token.token_type = Token.RPAREN; literal = ")" })
+    | ',' -> (read_char lexer, { Token.token_type = Token.COMMA; literal = "," })
+    | '+' -> (read_char lexer, { Token.token_type = Token.PLUS; literal = "+" })
+    | '{' ->
+        (read_char lexer, { Token.token_type = Token.LBRACE; literal = "{" })
+    | '}' ->
+        (read_char lexer, { Token.token_type = Token.RBRACE; literal = "}" })
+    | '\x00' -> (lexer, { Token.token_type = Token.EOF; literal = "\x00" })
+    | c ->
+        Printf.printf "we have a char here";
+        if is_alpha c then
+          let new_lexer, ident = read_identifier is_alpha lexer in
+          (new_lexer, { Token.token_type = Token.IDENT; literal = ident })
+        else if is_digit c then
+          let new_lexer, ident = read_identifier is_digit lexer in
+          (new_lexer, { Token.token_type = Token.INT; literal = ident })
+        else (lexer, { Token.token_type = Token.ILLEGAL; literal = "" })
 
   let generate_tokens input_string =
     let lexer = new_lexer input_string in
     let rec gen lxr tokens =
       match next_token lxr with
-      | _, Token.EOF -> List.rev_append tokens [ Token.EOF ]
+      | _, ({ Token.token_type = Token.EOF; literal = "\x00" } as t) ->
+          List.rev_append tokens [ t ]
       | l, tok -> gen l (tok :: tokens)
     in
     gen lexer []

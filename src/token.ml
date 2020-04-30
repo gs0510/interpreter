@@ -31,7 +31,9 @@ module Token = struct
     | FUNCTION -> "FUNCTION"
     | LET -> "LET"
 
-  let tokens_eq tok_a tok_b = tok_a = tok_b
+  type token = { token_type : token_type; literal : string }
 
-  let pretty_print ppf tok = Fmt.pf ppf "%s" (token_to_string tok)
+  let tokens_eq tok_a tok_b = tok_a.token_type = tok_b.token_type
+
+  let pretty_print ppf tok = Fmt.pf ppf "%s" (token_to_string tok.token_type)
 end

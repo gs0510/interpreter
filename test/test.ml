@@ -2,7 +2,7 @@ open Interpreter
 include Lexer
 include Token
 
-let basic_code = "5 + 1;"
+let basic_code = "let result = 5;"
 
 let basic_code_expected_tokens =
   [
@@ -17,17 +17,21 @@ let basic_code_expected_tokens =
 let monkey_source_code =
   "let five = 5;\n\
   \   let ten = 10;\n\
-  \     let add = fn(x, y) {\n\
-  \       x + y;\n\
+  \   let add = fn(x, y) {\n\
+  \      x + y;\n\
   \   };\n\
-  \   let result = add(five, ten);"
+  \   let result = add(five, ten);\n\
+  \    if five == ten \n\
+  \      if five != 5 \n\
+  \        five = 10\n\
+  \  else \n\
+  \    five = 10;\n\n\
+  \  "
 
 let source_code_expected_tokens =
   [
     { Token.token_type = Token.LET; literal = "let" };
     { Token.token_type = Token.IDENT; literal = "five" };
-    { Token.token_type = Token.IDENT; literal = "five" };
-    { Token.token_type = Token.ASSIGN; literal = "=" };
     { Token.token_type = Token.ASSIGN; literal = "=" };
     { Token.token_type = Token.INT; literal = "5" };
     { Token.token_type = Token.SEMICOLON; literal = ";" };
@@ -61,6 +65,22 @@ let source_code_expected_tokens =
     { Token.token_type = Token.COMMA; literal = "," };
     { Token.token_type = Token.IDENT; literal = "ten" };
     { Token.token_type = Token.RPAREN; literal = ")" };
+    { Token.token_type = Token.SEMICOLON; literal = ";" };
+    { Token.token_type = Token.IF; literal = "if" };
+    { Token.token_type = Token.IDENT; literal = "five" };
+    { Token.token_type = Token.EQ; literal = "==" };
+    { Token.token_type = Token.IDENT; literal = "ten" };
+    { Token.token_type = Token.IF; literal = "if" };
+    { Token.token_type = Token.IDENT; literal = "five" };
+    { Token.token_type = Token.NOT_EQ; literal = "!=" };
+    { Token.token_type = Token.INT; literal = "5" };
+    { Token.token_type = Token.IDENT; literal = "five" };
+    { Token.token_type = Token.ASSIGN; literal = "=" };
+    { Token.token_type = Token.INT; literal = "10" };
+    { Token.token_type = Token.ELSE; literal = "else" };
+    { Token.token_type = Token.IDENT; literal = "five" };
+    { Token.token_type = Token.ASSIGN; literal = "=" };
+    { Token.token_type = Token.INT; literal = "10" };
     { Token.token_type = Token.SEMICOLON; literal = ";" };
     { Token.token_type = Token.EOF; literal = "\x00" };
   ]
